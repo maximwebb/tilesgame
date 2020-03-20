@@ -8,6 +8,7 @@ public class Game implements Runnable {
 	private Display display;
 	public int width, height;
 	public String title;
+	public GameBoard gameBoard;
 
 	private boolean running = false;
 	private Thread thread;
@@ -19,6 +20,11 @@ public class Game implements Runnable {
 		this.width = width;
 		this.height = height;
 		this.title = title;
+		gameBoard = new GameBoard(4);
+		gameBoard.addTile(0, 0, 2);
+		gameBoard.addTile(1, 0, 2);
+		gameBoard.addTile(2, 0, 2);
+		gameBoard.addTile(3, 0, 2);
 	}
 
 	private void init(){
@@ -26,7 +32,11 @@ public class Game implements Runnable {
 	}
 
 	private void tick(){
-
+		gameBoard.move(1, 0);
+		gameBoard.move(0, -1);
+//		gameBoard.move(1, 0);
+//		gameBoard.move(0, -1);
+		gameBoard.move(0, 1);
 	}
 
 	private void render(){

@@ -58,7 +58,7 @@ public class GameBoard {
 	}
 
 	public Tile getTile (int x, int y) {
-		if (x < length && y < length) {
+		if (x >= 0 && x < length && y >= 0 && y < length) {
 			return board.get(y).get(x);
 		}
 		else {
@@ -99,7 +99,6 @@ public class GameBoard {
 	}
 
 	public void move(int down, int right) {
-		printBoard();
 		if (checkMoveValid(down, right)) {
 			boolean isVert = (right == 0);
 			boolean isForward = (down + right == 1);
@@ -146,7 +145,7 @@ public class GameBoard {
 						Tile startTile = (isVert ? board.get(i).get(j) : board.get(j).get(i));
 						Tile tile = (isVert ? board.get(i + offset).get(j) : board.get(j).get(i + offset));
 						if (startTile != null) {
-							while (i + offset < length && (tile == null || tile.getValue() == startTile.getValue()) && !merge) {
+							while (i + offset >= 0 && (tile == null || tile.getValue() == startTile.getValue()) && !merge) {
 								if (tile != null && tile.getValue() == startTile.getValue()) {
 									tile.doubleValue();
 									if (isVert)

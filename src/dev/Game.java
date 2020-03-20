@@ -34,8 +34,6 @@ public class Game implements Runnable {
 	private void tick(){
 		gameBoard.move(1, 0);
 		gameBoard.move(0, -1);
-//		gameBoard.move(1, 0);
-//		gameBoard.move(0, -1);
 		gameBoard.move(0, 1);
 	}
 

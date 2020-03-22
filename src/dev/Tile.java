@@ -9,6 +9,7 @@ public class Tile {
 	int x;
 	int y;
 	public boolean empty;
+	public boolean merged = false;
 
 	/* Value of 1 corresponds to empty */
 	private Tile (int value, int color, int x, int y) {
@@ -52,12 +53,18 @@ public class Tile {
 
 	public void doubleValue() {
 		this.value *= 2;
+		this.color++;
 		this.empty = false;
 	}
 
 	public void setEmpty() {
 		this.value = 1;
+		this.color = 0;
 		this.empty = true;
+	}
+
+	public void setMerged(boolean merge) {
+		this.merged = merge;
 	}
 
 	@Override

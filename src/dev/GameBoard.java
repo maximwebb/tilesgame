@@ -8,30 +8,33 @@ public class GameBoard {
 
 	public final int length;
 	public List<List<Tile>> board;
+	private Game game;
 	Map<Integer, Set<Integer>> emptyTiles;
 	private int score;
 
 	public HashMap<Integer, Color> colorPalette = new HashMap<>();
-	private Color[] colors = {new Color(227, 227, 227),
-			new Color(200, 200, 200),
-			new Color(245, 241, 201),
-			new Color(237, 229, 147),
-			new Color(245, 233, 108),
-			new Color(247, 192, 64),
-			new Color(222, 149, 2),
-			new Color(196, 85, 0),
-			new Color(184, 48, 7),
-			new Color(250, 57, 57),
-			new Color(250, 57, 125),
-			new Color(179, 36, 143),
-			new Color(127, 31, 156),
-			new Color(85, 31, 156)
+	private Color[] colors = {new Color(255, 255, 255),
+			new Color(180, 180, 180),
+			new Color(245, 222, 96),
+			new Color(237, 172, 70),
+			new Color(245, 123, 69),
+			new Color(247, 77, 32),
+			new Color(187, 22, 17),
+			new Color(125, 2, 9),
+			new Color(72, 24, 112),
+			new Color(195, 30, 250),
+			new Color(250, 100, 196),
+			new Color(72, 82, 203),
+			new Color(59, 183, 192),
+			new Color(38, 156, 65)
 	};
 
-	public GameBoard (int length) {
+	public GameBoard (Game game, int length) {
+		this.game = game;
 		this.length = length;
 		this.board = new ArrayList<>();
 		this.emptyTiles = new HashMap<>();
+
 
 		for (int i = 0; i < length; i++) {
 			List<Tile> row = new ArrayList<>();
@@ -47,9 +50,29 @@ public class GameBoard {
 		for (int i = 0; i < colors.length; i++) {
 			colorPalette.put(i, colors[i]);
 		}
+	}
 
-//		addRandomTile();
-//		addRandomTile();
+	public void tick() {
+		game.getKeyManager().tick();
+		if (game.getKeyManager().pressComplete) {
+			if (game.getKeyManager().up) {
+				move(-1, 0);
+				game.getKeyManager().completePress();
+				System.out.println("Up");
+			} else if (game.getKeyManager().down) {
+				move(1, 0);
+				game.getKeyManager().completePress();
+				System.out.println("Down");
+			} else if (game.getKeyManager().left) {
+				move(0, -1);
+				game.getKeyManager().completePress();
+				System.out.println("Left");
+			} else if (game.getKeyManager().right) {
+				move(0, 1);
+				game.getKeyManager().completePress();
+				System.out.println("Right");
+			}
+		}
 	}
 
 	public void addTile(int x, int y, int value) {
@@ -103,6 +126,14 @@ public class GameBoard {
 		return tiles;
 	}
 
+	public void setAllTilesUnmerged() {
+		for (List<Tile> row : board) {
+			for (Tile tile : row) {
+				tile.setMerged(false);
+			}
+		}
+	}
+
 	public void clearTile(int x, int y) {
 		getTile(x, y).setEmpty();
 		emptyTiles.get(y).add(x);
@@ -115,7 +146,7 @@ public class GameBoard {
 		}
 		for (int i = Math.max(0, -down); i < length - Math.max(0, down); i++) {
 			for (int j = Math.max(0, -right); j < length - Math.max(0, right); j++) {
-				Tile tile = board.get(i).get(j);
+				Tile tile = getTile(j, i);
 				Tile adjacentTile = getTile(j + right, i + down);
 				if (!tile.empty && (adjacentTile.empty || adjacentTile.getValue() == tile.getValue())) {
 					valid = true;
@@ -164,6 +195,7 @@ public class GameBoard {
 
 	public void move(int down, int right) {
 		if (checkMoveValid(down, right)) {
+			setAllTilesUnmerged();
 			int dir = down + right;
 			boolean isVert = (right == 0);
 			boolean isForward = (dir == 1);
@@ -187,7 +219,7 @@ public class GameBoard {
 					Tile startTile = (isVert ? getTile(j, i) : getTile(i, j));
 					Tile tile = (isVert ? board.get(i + offset).get(j) : board.get(j).get(i + offset));
 					if (!startTile.empty) {
-						while (tile != null && i + offset < length && i + offset >= 0 && (tile.empty || tile.getValue() == startTile.getValue()) && !merge) {
+						while (tile != null && i + offset < length && i + offset >= 0 && (tile.empty || (tile.getValue() == startTile.getValue() && !tile.merged)) && !merge) {
 							if (!tile.empty && tile.getValue() == startTile.getValue()) {
 								tile.doubleValue();
 								score += tile.getValue();
@@ -196,6 +228,7 @@ public class GameBoard {
 								else
 									clearTile(i, j);
 								merge = true;
+								tile.setMerged(true);
 							}
 							else {
 								offset += dir;
@@ -207,6 +240,7 @@ public class GameBoard {
 								moveTile(j, i, j, i + offset - dir);
 							else
 								moveTile(i, j, i + offset - dir, j);
+							printBoard();
 						}
 					}
 				}

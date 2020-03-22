@@ -8,10 +8,12 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GameBoardTest {
+	Game game = new Game("asdf", 1, 1);
+
 	@Test
 	void boardSizeCorrect() {
 		// ARRANGE
-		GameBoard gameBoard = new GameBoard(8);
+		GameBoard gameBoard = new GameBoard(game, 8);
 
 		// ACT
 		int boardHeight = gameBoard.board.size();
@@ -25,7 +27,7 @@ public class GameBoardTest {
 	@Test
 	void addTileIsCorrect() {
 		// ARRANGE
-		GameBoard gameBoard = new GameBoard(4);
+		GameBoard gameBoard = new GameBoard(game, 4);
 		gameBoard.addTile(0, 0, 1);
 		gameBoard.addTile(3, 3, 4);
 		gameBoard.addTile(2, 1, 16);
@@ -44,7 +46,7 @@ public class GameBoardTest {
 	@Test
 	void getTileIsCorrect() {
 		// ARRANGE
-		GameBoard gameBoard = new GameBoard(4);
+		GameBoard gameBoard = new GameBoard(game, 4);
 		gameBoard.board.get(0).set(0, new Tile(1, 0, 0));
 		gameBoard.board.get(3).set(1, new Tile(16, 1, 3));
 		gameBoard.board.get(2).set(2, new Tile(32, 2, 2));
@@ -63,7 +65,7 @@ public class GameBoardTest {
 	@Test
 	void clearTileIsCorrect() {
 		// ARRANGE
-		GameBoard gameBoard = new GameBoard(4);
+		GameBoard gameBoard = new GameBoard(game, 4);
 		gameBoard.board.get(0).set(0, new Tile(1, 0, 0));
 		gameBoard.board.get(3).set(1, new Tile(16, 1, 3));
 		gameBoard.board.get(2).set(2, new Tile(32, 2, 2));
@@ -81,7 +83,7 @@ public class GameBoardTest {
 	@Test
 	void moveTilesWithoutMerging() {
 		// ARRANGE
-		GameBoard gameBoard = new GameBoard(4);
+		GameBoard gameBoard = new GameBoard(game, 4);
 		gameBoard.board.get(2).set(0, new Tile(2, 0, 2));
 		gameBoard.board.get(2).set(2, new Tile(4, 2, 2));
 
@@ -95,11 +97,48 @@ public class GameBoardTest {
 
 	@Test
 	void moveTilesWithSingleMerge() {
-//		// ARRANGE
-//		GameBoard gameBoard = new GameBoard(4);
-//		gameBoard.board.get(3).set(0, new Tile(4, 0, 3));
-//		gameBoard.board.get(3).set(2, new Tile(4, 2, 3));
+		// ARRANGE
+		GameBoard gameBoard = new GameBoard(game, 4);
+		gameBoard.board.get(2).set(0, new Tile(2, 0, 2));
+		gameBoard.board.get(2).set(2, new Tile(2, 2, 2));
 
+		// ACT
+		gameBoard.move(0, -1);
 
+		// ASSERT
+		assertEquals(gameBoard.board.get(2).get(0), new Tile(4, 0, 2));
+	}
+
+	@Test
+	void multipleMergesCorrect1() {
+		// ARRANGE
+		GameBoard gameBoard = new GameBoard(game, 4);
+		gameBoard.board.get(2).set(0, new Tile(2, 0, 2));
+		gameBoard.board.get(2).set(1, new Tile(2, 1, 2));
+		gameBoard.board.get(2).set(2, new Tile(2, 2, 2));
+		gameBoard.board.get(2).set(3, new Tile(2, 3, 2));
+
+		// ACT
+		gameBoard.move(0, 1);
+
+		// ASSERT
+		assertEquals(gameBoard.board.get(2).get(2), new Tile(4, 2, 2));
+		assertEquals(gameBoard.board.get(2).get(3), new Tile(4, 3, 2));
+	}
+
+	@Test
+	void multipleMergesCorrect2() {
+		// ARRANGE
+		GameBoard gameBoard = new GameBoard(game, 4);
+		gameBoard.board.get(1).set(0, new Tile(4, 0, 1));
+		gameBoard.board.get(1).set(2, new Tile(2, 2, 1));
+		gameBoard.board.get(1).set(3, new Tile(2, 3, 1));
+
+		// ACT
+		gameBoard.move(0, 1);
+
+		// ASSERT
+		assertEquals(gameBoard.board.get(1).get(2), new Tile(4, 2, 1));
+		assertEquals(gameBoard.board.get(1).get(3), new Tile(4, 3, 1));
 	}
 }

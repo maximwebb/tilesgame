@@ -1,17 +1,23 @@
 package dev;
 import dev.display.Display;
 import dev.input.KeyManager;
+import dev.models.DFS;
+import dev.models.Model;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Game implements Runnable {
+	private final Model model;
 	private Display display;
 	public int width, height;
 	public String title;
 	public GameBoard gameBoard;
-	public int count = 0;
+	public List<GameBoard> gameBoardHistory;
+	public int ticks = 0;
 
 	private boolean running = false;
 	private Thread thread;
@@ -21,17 +27,20 @@ public class Game implements Runnable {
 
 	private KeyManager keyManager;
 
-	public Game(String title, int width, int height){
+	public Game(String title, int width, int height, Model model){
 		this.width = width;
 		this.height = height;
 		this.title = title;
+		this.model = model;
+
 		keyManager = new KeyManager();
 		gameBoard = new GameBoard(this, 4);
-		//gameBoard.addRandomTile();
-		//gameBoard.addRandomTile();
-		gameBoard.addTile(0, 0, 4);
-		gameBoard.addTile(1, 0, 2);
-		gameBoard.addTile(2, 0, 2);
+		gameBoardHistory = new ArrayList<>();
+		gameBoard.addRandomTile();
+		gameBoard.addRandomTile();
+		//gameBoard.addTile(0, 0, 4);
+		//gameBoard.addTile(1, 0, 2);
+		//gameBoard.addTile(2, 0, 2);
 		gameBoard.printBoard();
 	}
 
@@ -41,16 +50,33 @@ public class Game implements Runnable {
 	}
 
 	private void tick(){
-
-		if (gameBoard.checkValidMoveExists()) {
-			//gameBoard.move(0, -1);
-			gameBoard.tick();
+		ticks++;
+		if (this.model == null) {
+			if (gameBoard.checkValidMoveExists()) {
+				gameBoard.tick();
+			}
+			else {
+				System.out.println("Game Over...");
+				System.out.println("Score:" + gameBoard.getScore());
+				stop();
+			}
 		}
 		else {
-			System.out.println("Game Over...");
-			System.out.println("Score:" + gameBoard.getScore());
-			stop();
+			//if (ticks % 100 == 0) {
+				List<Vector> moves = this.model.computeMove(new GameBoard(gameBoard));
+				if (moves.isEmpty()) {
+					System.out.println("Game Over...");
+					System.out.println("Score:" + gameBoard.getScore());
+					stop();
+				}
+				else {
+					Vector move = moves.get(0);
+					gameBoard.move(move.getY(), move.getX());
+					gameBoardHistory.add(new GameBoard(gameBoard));
+				}
+			//}
 		}
+
 
 	}
 

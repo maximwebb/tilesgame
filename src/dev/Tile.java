@@ -28,12 +28,13 @@ public class Tile {
 		this.empty = (value == 1);
 	}
 
-	public Tile (Tile tile, int xNew, int yNew) {
+	public Tile (Tile tile) {
 		this.value = tile.value;
 		this.color = tile.color;
-		this.x = xNew;
-		this.y = yNew;
+		this.x = tile.x;
+		this.y = tile.y;
 		this.empty = (value == 1);
+		this.merged = tile.merged;
 	}
 
 	public void setPos(int xNew, int yNew) {

@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class GameBoardTest {
-	Game game = new Game("asdf", 1, 1);
+class GameBoardTest {
+	Game game = new Game("asdf", 1, 1, null);
 
 	@Test
 	void boardSizeCorrect() {

@@ -8,14 +8,15 @@ import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
-public class IndividualNeuralNetwork implements Model {
+public class IndividualNN implements Model {
 
 	private final int layerNum;
 	public List<Integer> layerSizes;
 	public List<List<Double>> layers;
 	public List<Map<Integer, Map<Integer, Double>>> weights;
+	private double fitness;
 
-	public IndividualNeuralNetwork(int layerNum, List<Integer> layerSizes) {
+	public IndividualNN(int layerNum, List<Integer> layerSizes, boolean randomInit) {
 		this.layerNum = layerNum;
 		this.layerSizes = layerSizes;
 
@@ -36,12 +37,19 @@ public class IndividualNeuralNetwork implements Model {
 			for (int j = 0; j < layers.get(i).size(); j++) {
 				Map<Integer, Double> singleSourceWeights = new HashMap<>();
 				for (int k = 0; k < layers.get(i+1).size(); k++) {
-					singleSourceWeights.put(k, 0d);
+					if (randomInit) {
+						singleSourceWeights.put(k, Math.random());
+					}
+					else {
+						singleSourceWeights.put(k, 0d);
+					}
 				}
 				weightLayer.put(j, singleSourceWeights);
 			}
 			weights.add(weightLayer);
 		}
+
+		this.fitness = 1d;
 	}
 
 	public double getWeight(int layer, int sourceNeuron, int targetNeuron) {
@@ -97,10 +105,18 @@ public class IndividualNeuralNetwork implements Model {
 		}
 	}
 
+	public void setFitness(double fitness) {
+		this.fitness = fitness;
+	}
+
+	public double getFitness() {
+		return this.fitness;
+	}
+
 	@Override
 	public List<Vector> computeMove(GameBoard gameBoard) {
 		List<Tile> tiles = gameBoard.getAllTiles();
-		List<Double> inputs = tiles.stream().map(t -> Math.log(t.getValue())/Math.log(2)).collect(toList());
+		List<Double> inputs = tiles.stream().map(t -> (Math.log(t.getValue())/Math.log(2))/16).collect(toList());
 		forwardPropagate(inputs);
 
 		List<Vector> possibleMoves = new ArrayList<>(List.of(Vector.up(), Vector.down(), Vector.left(), Vector.right()));

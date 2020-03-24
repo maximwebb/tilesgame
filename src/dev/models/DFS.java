@@ -56,14 +56,12 @@ public class DFS implements Model {
 		List<Vector> result = new ArrayList<>();
 
 		for (int i = 0; i < moveCombinations.size(); i++) {
-			System.out.println("Move " + i);
 			int score = 0;
 			boolean valid = true;
 			List<Vector> moveCombo = moveCombinations.get(i);
 			virtualGameBoard = new GameBoard(gameBoard);
 			// Perform all possible movements for given depth.
 			for (Vector move : moveCombo) {
-				virtualGameBoard.printBoard();
 				if (virtualGameBoard.checkMoveValid(move.getY(), move.getX())) {
 					virtualGameBoard.move(move.getY(), move.getX());
 				}
@@ -90,7 +88,6 @@ public class DFS implements Model {
 				result = moveCombo;
 			}
 		}
-		System.out.println(result.size());
 		return new ArrayList<>(result);
 	}
 }

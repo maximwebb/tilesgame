@@ -8,8 +8,6 @@ public class GameBoard {
 
 	public final int length;
 	public List<List<Tile>> board;
-	private Game game;
-	//Map<Integer, Set<Integer>> emptyTiles;
 	private int score;
 
 	public HashMap<Integer, Color> colorPalette = new HashMap<>();
@@ -29,22 +27,16 @@ public class GameBoard {
 			new Color(38, 156, 65)
 	};
 
-	public GameBoard (Game game, int length) {
-		this.game = game;
+	public GameBoard (int length) {
 		this.length = length;
 		this.board = new ArrayList<>();
-		//this.emptyTiles = new HashMap<>();
-
 
 		for (int i = 0; i < length; i++) {
 			List<Tile> row = new ArrayList<>();
-			//Set<Integer> emptyTilesRow = new HashSet<>();
 			for (int j = 0; j < length; j++) {
 				row.add(new Tile(1, j, i));
-				//emptyTilesRow.add(j);
 			}
 			board.add(row);
-			//emptyTiles.put(i, emptyTilesRow);
 		}
 
 		for (int i = 0; i < colors.length; i++) {
@@ -55,7 +47,6 @@ public class GameBoard {
 	// Copy constructor, used for simulating game play.
 	public GameBoard (GameBoard gameBoard) {
 		this.length = gameBoard.length;
-		this.game = gameBoard.game;
 		this.board = new ArrayList<>();
 		this.colors = gameBoard.colors;
 
@@ -71,10 +62,10 @@ public class GameBoard {
 		}
 
 		this.score = gameBoard.getScore();
-		//this.emptyTiles = new HashMap<>();
 	}
 
 	public void tick() {
+		Game game = Game.getInstance();
 		game.getKeyManager().tick();
 		if (game.getKeyManager().pressComplete) {
 			if (game.getKeyManager().up) {
@@ -100,7 +91,6 @@ public class GameBoard {
 	public void addTile(int x, int y, int value) {
 		if (x >= 0 && x < length && y >= 0 && y < length) {
 			board.get(y).set(x, new Tile(value, x, y));
-			//emptyTiles.get(y).remove(x);
 		}
 	}
 
@@ -125,8 +115,6 @@ public class GameBoard {
 			int value = getTile(x, y).getValue();
 			getTile(x, y).setEmpty();
 			getTile(xNew, yNew).setValue(value);
-			//emptyTiles.get(yNew).remove(xNew);
-			//emptyTiles.get(y).add(x);
 		}
 	}
 
@@ -158,7 +146,6 @@ public class GameBoard {
 
 	public void clearTile(int x, int y) {
 		getTile(x, y).setEmpty();
-		//emptyTiles.get(y).add(x);
 	}
 
 	public boolean checkMoveValid(int down, int right) {

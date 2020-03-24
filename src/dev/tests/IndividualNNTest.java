@@ -2,7 +2,7 @@ package dev.tests;
 import dev.Game;
 import dev.GameBoard;
 import dev.Vector;
-import dev.models.IndividualNeuralNetwork;
+import dev.models.IndividualNN;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -11,11 +11,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class IndividualNeuralNetworkTest {
+class IndividualNNTest {
 	@Test
 	void layersInitialiseCorrectly() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(4, new ArrayList<>(List.of(10, 16, 16, 4)));
+		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(10, 16, 16, 4)), false);
 
 		// ACT
 		int layerNum = inn.layers.size();
@@ -35,7 +35,7 @@ class IndividualNeuralNetworkTest {
 	@Test
 	void weightsInitialiseCorrectly() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(3, new ArrayList<>(List.of(3, 4, 2)));
+		IndividualNN inn = new IndividualNN(3, new ArrayList<>(List.of(3, 4, 2)), false);
 
 		// ACT
 		int weightLayersNum = inn.weights.size();
@@ -50,7 +50,7 @@ class IndividualNeuralNetworkTest {
 	@Test
 	void setsWeightCorrectly() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(3, new ArrayList<>(List.of(3, 4, 2)));
+		IndividualNN inn = new IndividualNN(3, new ArrayList<>(List.of(3, 4, 2)), false);
 
 		// ACT
 		inn.setWeight(0, 1, 0, -3);
@@ -66,7 +66,7 @@ class IndividualNeuralNetworkTest {
 	@Test
 	void getsWeightCorrectly() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(4, new ArrayList<>(List.of(3, 4, 6, 3)));
+		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(3, 4, 6, 3)), false);
 		inn.setWeight(1, 2, 5, 0.66);
 		inn.setWeight(2, 0, 0, 100);
 
@@ -82,7 +82,7 @@ class IndividualNeuralNetworkTest {
 	@Test
 	void setsNeuronCorrectly() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(4, new ArrayList<>(List.of(3, 4, 6, 3)));
+		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(3, 4, 6, 3)), false);
 
 		// ACT
 		inn.setNeuron(1, 3, -9d);
@@ -96,7 +96,7 @@ class IndividualNeuralNetworkTest {
 	@Test
 	void getsNeuronCorrectly() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(4, new ArrayList<>(List.of(3, 4, 6, 3)));
+		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(3, 4, 6, 3)), false);
 		inn.setNeuron(0, 1, 3.141);
 		inn.setNeuron(0, 1, -0.4);
 		inn.setNeuron(3, 1, 1.5);
@@ -113,7 +113,7 @@ class IndividualNeuralNetworkTest {
 	@Test
 	void setsInputsCorrectly() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(3, new ArrayList<>(List.of(4, 10, 4)));
+		IndividualNN inn = new IndividualNN(3, new ArrayList<>(List.of(4, 10, 4)), false);
 		List<Double> inputs = new ArrayList<>(List.of(3.141, 592d, -6.5, 0d));
 
 		// ACT
@@ -129,7 +129,7 @@ class IndividualNeuralNetworkTest {
 	@Test
 	void getsOutputsCorrectly() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(3, new ArrayList<>(List.of(4, 10, 3)));
+		IndividualNN inn = new IndividualNN(3, new ArrayList<>(List.of(4, 10, 3)), false);
 		inn.setNeuron(2, 0, 2.718);
 		inn.setNeuron(2, 1, -1.618);
 		inn.setNeuron(2, 2, 0.571);
@@ -144,7 +144,7 @@ class IndividualNeuralNetworkTest {
 	@Test
 	void clearsNeuronsCorrectly() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(4, new ArrayList<>(List.of(3, 4, 4, 2)));
+		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(3, 4, 4, 2)), false);
 		inn.setNeuron(0, 1, 1.3);
 		inn.setNeuron(3, 0, -1.4);
 		inn.setNeuron(3, 1, 5d);
@@ -162,7 +162,7 @@ class IndividualNeuralNetworkTest {
 	@Test
 	void forwardPropagationIsCorrect() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(4, new ArrayList<>(List.of(2, 2, 3, 2)));
+		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(2, 2, 3, 2)), false);
 		List<Double> inputs = new ArrayList<>(List.of(0.8, 0.3));
 		inn.setWeight(0, 0, 0, 0.5);
 		inn.setWeight(0, 0, 1, 0.5);
@@ -196,9 +196,9 @@ class IndividualNeuralNetworkTest {
 	@Test
 	void computesMoveSuccessfully() {
 		// ARRANGE
-		IndividualNeuralNetwork inn = new IndividualNeuralNetwork(4, new ArrayList<>(List.of(16, 16, 16, 4)));
+		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(16, 16, 16, 4)), false);
 		Game game = new Game("2048", 1, 1, null);
-		GameBoard gameBoard = new GameBoard(game, 4);
+		GameBoard gameBoard = new GameBoard(4);
 		gameBoard.addTile(0, 0, 2);
 		gameBoard.addTile(0, 3, 2);
 		gameBoard.addTile(1, 2, 32);

@@ -105,6 +105,10 @@ public class IndividualNN implements Model {
 		}
 	}
 
+	public void backPropagate(List<Double> values) {
+
+	}
+
 	public void setFitness(double fitness) {
 		this.fitness = fitness;
 	}

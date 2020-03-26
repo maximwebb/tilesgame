@@ -1,5 +1,6 @@
 package dev;
 
+import dev.maths.Matrix;
 import dev.models.DFS;
 import dev.models.IndividualNN;
 

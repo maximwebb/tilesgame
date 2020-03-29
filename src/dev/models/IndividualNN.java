@@ -85,9 +85,7 @@ public class IndividualNN implements Model {
 	}
 
 	public void backPropagate(List<Double> inputs, Matrix targets) {
-		forwardPropagate(inputs);
-		Matrix outputs = getOutputs();
-
+		double cost1 = getCost(inputs, targets);
 
 		List<Matrix> weightCostGradient = new ArrayList<>();
 		for (Matrix mat : weights) {
@@ -140,6 +138,43 @@ public class IndividualNN implements Model {
 				biasCostGradient.get(l + 1).set(i, deltaCost * 1d * 1d);
 			}
 		}
+
+		int count = 0;
+		double epsilon = 0.1;
+		double learningRate = 0.2;
+		double cost2 = Integer.MAX_VALUE;
+		/* Gradient descent */
+		while (count < 100 && cost2 - cost1 > epsilon) {
+			cost2 = getCost(inputs, targets);
+			count++;
+			for (int l = 0; l < weights.size(); l++) {
+				Matrix weightLayer = weights.get(l);
+				for (int i = 0; i < weightLayer.height; i++) {
+					for (int j = 0; j < weightLayer.width; j++) {
+						weightLayer.set(j, i, weightLayer.get(j, i) - learningRate * weightCostGradient.get(l).get(j, i));
+					}
+				}
+			}
+			for (int l = 0; l < layers.size(); l++) {
+				Matrix biasLayer = biases.get(l);
+				for (int i = 0; i < biasLayer.height; i++) {
+					biasLayer.set(i, biasLayer.get(i) - learningRate * biasCostGradient.get(l).get(i));
+				}
+			}
+
+			cost1 = cost2;
+		}
+	}
+
+	public double getCost(List<Double> inputs, Matrix targets) {
+		forwardPropagate(inputs);
+		Matrix outputs = getOutputs();
+		double cost = 0d;
+		for (int i = 0; i < inputs.size(); i++) {
+			cost += (outputs.get(i) - inputs.get(i)) * (outputs.get(i) - inputs.get(i));
+		}
+
+		return cost;
 	}
 
 	public void setFitness(double fitness) {

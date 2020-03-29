@@ -2,14 +2,14 @@ package dev.tests;
 import dev.Game;
 import dev.GameBoard;
 import dev.Vector;
+import dev.maths.Matrix;
 import dev.models.IndividualNN;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class IndividualNNTest {
 	@Test
@@ -17,19 +17,22 @@ class IndividualNNTest {
 		// ARRANGE
 		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(10, 16, 16, 4)), false);
 
+		Matrix mat = new Matrix(new ArrayList<>(List.of(1d, 2d, 3d, 4d, 5d, 6d)), 3, 2);
+		System.out.println(mat.toString());
+
 		// ACT
 		int layerNum = inn.layers.size();
-		int layer1Size = inn.layers.get(0).size();
-		int layer2Size = inn.layers.get(1).size();
-		int layer3Size = inn.layers.get(2).size();
-		int layer4Size = inn.layers.get(3).size();
+		int layer1Size = inn.layers.get(0).height;
+		int layer2Size = inn.layers.get(1).height;
+		int layer3Size = inn.layers.get(2).height;
+		int layer4Size = inn.layers.get(3).height;
 
 		// ASSERT
 		assertEquals(4,layerNum);
-		assertEquals(new ArrayList<>(Collections.nCopies(layer1Size, 0d)), inn.layers.get(0));
-		assertEquals(new ArrayList<>(Collections.nCopies(layer2Size, 0d)), inn.layers.get(1));
-		assertEquals(new ArrayList<>(Collections.nCopies(layer3Size, 0d)), inn.layers.get(2));
-		assertEquals(new ArrayList<>(Collections.nCopies(layer4Size, 0d)), inn.layers.get(3));
+		assertEquals(Matrix.getMatrix(false, layer1Size, 1), inn.layers.get(0));
+		assertEquals(Matrix.getMatrix(false, layer2Size, 1), inn.layers.get(1));
+		assertEquals(Matrix.getMatrix(false, layer3Size, 1), inn.layers.get(2));
+		assertEquals(Matrix.getMatrix(false, layer4Size, 1), inn.layers.get(3));
 	}
 
 	@Test
@@ -39,12 +42,12 @@ class IndividualNNTest {
 
 		// ACT
 		int weightLayersNum = inn.weights.size();
-		int weightLayer2Size = inn.weights.get(1).size();
+		int weightLayer2Size = inn.weights.get(1).width;
 
 		// ASSERT
 		assertEquals(weightLayersNum, 2);
 		assertEquals(weightLayer2Size, 4);
-		assertEquals(0d, inn.weights.get(0).get(2).get(1));
+		assertEquals(0d, inn.weights.get(0).get(2, 1));
 	}
 
 	@Test
@@ -55,8 +58,8 @@ class IndividualNNTest {
 		// ACT
 		inn.setWeight(0, 1, 0, -3);
 		inn.setWeight(1, 3, 1, 0.9);
-		double weight1 = inn.weights.get(0).get(1).get(0);
-		double weight2 = inn.weights.get(1).get(3).get(1);
+		double weight1 = inn.weights.get(0).get(1, 0);
+		double weight2 = inn.weights.get(1).get(3, 1);
 
 		// ASSERT
 		assertEquals(-3, weight1);
@@ -135,10 +138,10 @@ class IndividualNNTest {
 		inn.setNeuron(2, 2, 0.571);
 
 		// ACT
-		List<Double> outputs = inn.getOutputs();
+		Matrix outputs = inn.getOutputs();
 
 		// ASSERT
-		assertEquals(new ArrayList<>(List.of(2.718, -1.618, 0.571)), outputs);
+		assertEquals(new Matrix(new ArrayList<>(List.of(2.718, -1.618, 0.571)), 3, 1), outputs);
 	}
 
 	@Test

@@ -3,6 +3,7 @@ package dev.models;
 import dev.GameBoard;
 import dev.Tile;
 import dev.Vector;
+import dev.maths.Matrix;
 
 import java.util.*;
 
@@ -10,10 +11,11 @@ import static java.util.stream.Collectors.toList;
 
 public class IndividualNN implements Model {
 
-	private final int layerNum;
+	private int layerNum;
 	public List<Integer> layerSizes;
-	public List<List<Double>> layers;
-	public List<Map<Integer, Map<Integer, Double>>> weights;
+	public List<Matrix> layers;
+	public List<Matrix> biases;
+	public List<Matrix> weights;
 	private double fitness;
 
 	public IndividualNN(int layerNum, List<Integer> layerSizes, boolean randomInit) {
@@ -22,95 +24,126 @@ public class IndividualNN implements Model {
 
 		/* Initialises all neuron activations to 0 */
 		layers = new ArrayList<>();
+		biases = new ArrayList<>();
 		for (int i = 0; i < layerNum; i++) {
-			List<Double> layer = new ArrayList<>();
-			for (int j = 0; j < layerSizes.get(i); j++) {
-				layer.add(0d);
-			}
-			layers.add(layer);
+			layers.add(Matrix.getMatrix(false, layerSizes.get(i), 1));
+			biases.add(Matrix.map(Matrix.getMatrix(randomInit, layerSizes.get(i), 1), a -> a * 10));
 		}
 
 		/* Initialises all weights to 0 */
 		weights = new ArrayList<>();
 		for (int i = 0; i < layerNum - 1; i++) {
-			Map<Integer, Map<Integer, Double>> weightLayer = new HashMap<>();
-			for (int j = 0; j < layers.get(i).size(); j++) {
-				Map<Integer, Double> singleSourceWeights = new HashMap<>();
-				for (int k = 0; k < layers.get(i+1).size(); k++) {
-					if (randomInit) {
-						singleSourceWeights.put(k, Math.random());
-					}
-					else {
-						singleSourceWeights.put(k, 0d);
-					}
-				}
-				weightLayer.put(j, singleSourceWeights);
-			}
-			weights.add(weightLayer);
+			weights.add(Matrix.getMatrix(randomInit, layers.get(i+1).height, layers.get(i).height));
 		}
 
 		this.fitness = 1d;
 	}
 
 	public double getWeight(int layer, int sourceNeuron, int targetNeuron) {
-		return weights.get(layer).get(sourceNeuron).get(targetNeuron);
+		return weights.get(layer).get(sourceNeuron, targetNeuron);
 	}
 
 	public void setWeight(int layer, int sourceNeuron, int targetNeuron, double value) {
-		weights.get(layer).get(sourceNeuron).put(targetNeuron, value);
+		weights.get(layer).set(sourceNeuron, targetNeuron, value);
 	}
 
 	public void setInputs(List<Double> values) {
-		if (layers.get(0).size() == values.size()) {
-			layers.set(0, new ArrayList<>(values));
+		if (layers.get(0).height == values.size()) {
+			layers.set(0, new Matrix(new ArrayList<>(values), layers.get(0).height, 1));
 		}
 		else {
 			System.out.println("Someone fucked up.");
 		}
 	}
 
-	public List<Double> getOutputs() {
-		return new ArrayList<>(layers.get(layers.size() - 1));
+	//
+	public Matrix getOutputs() {
+		return layers.get(layers.size() - 1);
 	}
 
 	public double getNeuron(int layer, int sourceNeuron) {
-		return layers.get(layer).get(sourceNeuron);
+		return layers.get(layer).get(0, sourceNeuron);
 	}
 
 	public void setNeuron(int layer, int sourceNeuron, double value) {
-		layers.get(layer).set(sourceNeuron, value);
+		layers.get(layer).set(0, sourceNeuron, value);
 	}
 
 	public void clearAllNeurons() {
-		for (List<Double> layer : layers) {
-			for (int i = 0; i < layer.size(); i++) {
-				layer.set(i, 0d);
-			}
+		for (int i = 0; i < layers.size(); i++) {
+			layers.set(i, Matrix.getMatrix(false, layers.get(i).height, 1));
 		}
 	}
 
 	public void forwardPropagate(List<Double> values) {
 		setInputs(values);
+		//DoubleUnaryOperator ReLU = a -> Math.max(0, a);
 		for (int i = 0; i < layers.size() - 1; i++) {
-			List<Double> layer = layers.get(i);
-			for (int j = 0; j < layer.size(); j++) {
-				double sourceActivation = layer.get(j);
-				for (Map.Entry<Integer, Double> weight : weights.get(i).get(j).entrySet()) {
-					int target = weight.getKey();
-					double targetActivation = layers.get(i+1).get(target);
-					double weightValue = weight.getValue();
-					layers.get(i+1).set(target, targetActivation + sourceActivation * weightValue);
+			Matrix layer = layers.get(i);
+			layers.set(i+1, Matrix.add(Matrix.multiply(weights.get(i), layer), biases.get(i)));
+		}
+	}
+
+	public void backPropagate(List<Double> inputs, Matrix targets) {
+		forwardPropagate(inputs);
+		Matrix outputs = getOutputs();
+
+
+		List<Matrix> weightCostGradient = new ArrayList<>();
+		for (Matrix mat : weights) {
+			weightCostGradient.add(Matrix.getMatrix(false, mat.height, mat.width));
+		}
+		List<Matrix> biasCostGradient = new ArrayList<>();
+		List<Matrix> errors = new ArrayList<>();
+		for (Matrix mat : layers) {
+			errors.add(Matrix.getMatrix(false, mat.height, 1));
+			biasCostGradient.add(Matrix.getMatrix(false, mat.height, 1));
+		}
+
+		/* Calculate final layer derivatives */
+		int finalLayer = layers.size()-1;
+		// i is target node
+		for (int i = 0; i < layers.get(finalLayer).height; i++) {
+			double deltaCost = 2 * (layers.get(finalLayer).get(i) - targets.get(i)); // dC/d(a_i)^L
+			errors.get(finalLayer).set(i, deltaCost);
+			double deltaActivation = 1d; //d(a_j)^L/d(z_i)^L
+			double deltaRawActivation; // d(z_i)^L/d(w_ij)^L
+			// j is source node
+			for (int j = 0; j < weights.get(weights.size()-1).height; j++) {
+				deltaRawActivation = layers.get(finalLayer - 1).get(j);
+				double delta = deltaCost * deltaActivation * deltaRawActivation; // dC/d(w_ij)^L
+				weightCostGradient.get(finalLayer - 2).set(j, i, delta);
+			}
+			biasCostGradient.get(finalLayer - 1).set(i, deltaCost * 1d * 1d);
+		}
+
+		/* Calculate hidden layer derivatives */
+		// l is the weight layer (l corresponds to the source layer number)
+		for (int l = weights.size() - 2; l >= 0; l--) {
+			// i is target node
+			for (int i = 0; i < layers.get(l+1).height; i++) {
+				// Sum over routes that a_i can influence cost function
+				double deltaCost = 0d; // dC/d(a_i)^L
+				for (int k = 0; i < layers.get(l+1).height; k++) {
+					deltaCost += (weights.get(l+1).get(k, i) * 1d * errors.get(l+2).get(k));
 				}
+				errors.get(l+1).set(i, deltaCost);
+
+				double deltaActivation = 1d; //d(a_j)^L/d(z_i)^L
+				double deltaRawActivation; // d(z_i)^L/d(w_ij)^L
+				// j is source node
+				for (int j = 0; j < layers.get(l).height; j++) {
+					deltaRawActivation = layers.get(l+1).get(j);
+					double delta = deltaCost * deltaActivation * deltaRawActivation; // dC/d(w_ij)^L
+					weightCostGradient.get(l).set(j, i, delta);
+				}
+				biasCostGradient.get(l + 1).set(i, deltaCost * 1d * 1d);
 			}
 		}
 	}
 
-	public void backPropagate(List<Double> values) {
-
-	}
-
 	public void setFitness(double fitness) {
-		this.fitness = fitness;
+		this.fitness += fitness;
 	}
 
 	public double getFitness() {
@@ -124,11 +157,11 @@ public class IndividualNN implements Model {
 		forwardPropagate(inputs);
 
 		List<Vector> possibleMoves = new ArrayList<>(List.of(Vector.up(), Vector.down(), Vector.left(), Vector.right()));
-		List<Double> outputs = getOutputs();
+		Matrix outputs = getOutputs();
 		Map<Double, Vector> outputMap = new TreeMap<>(Collections.reverseOrder());
 
-		for (int i = 0; i < outputs.size(); i++) {
-			outputMap.put(outputs.get(i), possibleMoves.get(i));
+		for (int i = 0; i < outputs.height; i++) {
+			outputMap.put(outputs.get(0, i), possibleMoves.get(i));
 		}
 
 		return new ArrayList<>(outputMap.values());

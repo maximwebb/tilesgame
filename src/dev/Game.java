@@ -1,13 +1,15 @@
 package dev;
 import dev.display.Display;
 import dev.input.KeyManager;
-import dev.models.*;
+import dev.models.IndividualNN;
+import dev.models.Model;
+import dev.models.PopulationManager;
+import dev.models.ReproductionType;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Game implements Runnable {
 	private Model model;
@@ -49,7 +51,7 @@ public class Game implements Runnable {
 		display = new Display(title, width, height);
 		display.getFrame().addKeyListener(keyManager);
 
-		PopulationManager populationManager = new PopulationManager(200, 0.3, 0.15, 5, 16, 10, 4, ReproductionType.WEIGHTED);
+		PopulationManager populationManager = new PopulationManager(100, 0.01, 0.03, 6, 16, 16, 4, ReproductionType.WEIGHTED);
 		int generations = 50;
 		for (int i = 0; i < generations; i++) {
 			populationManager.generateNewPopulation();

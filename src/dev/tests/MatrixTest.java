@@ -26,16 +26,28 @@ public class MatrixTest {
 	@Test
 	void getIsCorrect() {
 		// ARRANGE
-		Matrix matrix1 = new Matrix(new ArrayList<>(List.of(3d, 1d, 4d, 2d, 5d, 9d)), 3, 2);
-		Matrix matrix2 = new Matrix(new ArrayList<>(List.of(6d, 5d, 4d, 3d, 1d)), 5, 1);
+		Matrix matrix = new Matrix(new ArrayList<>(List.of(3d, 1d, 4d, 2d, 5d, 9d)), 3, 2);
+
 
 		// ACT
-		double val1 = matrix1.get(1, 1);
-		double val2 = matrix2.get(3);
+		double val = matrix.get(1, 1);
+
 
 		// ASSERT
-		assertEquals(2d, val1);
-		assertEquals(3d, val2);
+		assertEquals(2d, val);
+
+	}
+
+	@Test
+	void columnVectorGetIsCorrect() {
+		// ARRANGE
+		Matrix matrix = new Matrix(new ArrayList<>(List.of(6d, 5d, 4d, 3d, 1d)), 5, 1);
+
+		// ACT
+		double val = matrix.get(3);
+
+		// ASSERT
+		assertEquals(3d, val);
 	}
 
 	@Test
@@ -76,6 +88,18 @@ public class MatrixTest {
 
 		// ASSERT
 		assertEquals(10d, matrix1.get(2, 1));
+	}
+
+	@Test
+	void columnVectorSetIsCorrect() {
+		// ARRANGE
+		Matrix matrix1 = new Matrix(new ArrayList<>(List.of(3d, 1d, 4d, 2d, 5d)), 5, 1);
+
+		// ACT
+		matrix1.set(3, 10d);
+
+		// ASSERT
+		assertEquals(10d, matrix1.get(3));
 	}
 
 	@Test

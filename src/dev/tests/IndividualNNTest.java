@@ -197,6 +197,27 @@ class IndividualNNTest {
 	}
 
 	@Test
+	void singleLayerBackPropagationIsCorrect() {
+		// ARRANGE
+		IndividualNN inn = new IndividualNN(3, new ArrayList<>(List.of(1, 2, 1)), false);
+		inn.setWeight(0, 0, 0, 0.8);
+		inn.setWeight(0, 0, 1, 0.4);
+
+		inn.setWeight(1, 0, 0, -0.5);
+		inn.setWeight(1, 1, 0, 0.9);
+		inn.setBias(1, 0, 1);
+		inn.setBias(1, 1, 0.5);
+
+		inn.setBias(2, 0, 0.3);
+
+		// ACT
+		inn.backPropagate(new ArrayList<>(List.of(0.8)), new Matrix(new ArrayList<>(List.of(-0.9)), 1, 1));
+
+		// ASSERT
+
+	}
+
+	@Test
 	void computesMoveSuccessfully() {
 		// ARRANGE
 		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(16, 16, 16, 4)), false);

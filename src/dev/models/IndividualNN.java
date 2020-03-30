@@ -92,90 +92,98 @@ public class IndividualNN implements Model {
 		}
 	}
 
-	public void backPropagate(List<Double> inputs, Matrix targets) {
-		double cost2 = getCost(inputs, targets);
+	public void backPropagate(List<List<Double>> inputsList, List<Matrix> targetsList) {
+		for (int count = 0; count < inputsList.size(); count++) {
+			List<Double> inputs = inputsList.get(count);
+			Matrix targets = targetsList.get(count);
+			double cost2 = getCost(inputs, targets);
+			double weightCostMagnitude = 0d;
+			double biasCostMagnitude = 0d;
 
-		List<Matrix> weightCostGradient = new ArrayList<>();
-		for (Matrix mat : weights) {
-			weightCostGradient.add(Matrix.getMatrix(false, mat.height, mat.width));
-		}
-		List<Matrix> biasCostGradient = new ArrayList<>();
-		List<Matrix> errors = new ArrayList<>();
-		for (Matrix mat : layers) {
-			errors.add(Matrix.getMatrix(false, mat.height, 1));
-			biasCostGradient.add(Matrix.getMatrix(false, mat.height, 1));
-		}
+			List<Matrix> weightCostGradient = new ArrayList<>();
+			for (Matrix mat : weights) {
+				weightCostGradient.add(Matrix.getMatrix(false, mat.height, mat.width));
 
-		/* Calculate final layer derivatives */
-		int finalLayer = layers.size()-1;
-		// i is target node
-		for (int i = 0; i < layers.get(finalLayer).height; i++) {
-			double deltaCost = 2 * (layers.get(finalLayer).get(i) - targets.get(i)); // dC/d(a_i)^L
-			errors.get(finalLayer).set(i, deltaCost);
-			double deltaActivation = 1d; //d(a_j)^L/d(z_i)^L
-			double deltaRawActivation; // d(z_i)^L/d(w_ij)^L
-			// j is source node
-			for (int j = 0; j < weights.get(weights.size()-1).width; j++) {
-				deltaRawActivation = layers.get(finalLayer - 1).get(j);
-				double delta = deltaCost * deltaActivation * deltaRawActivation; // dC/d(w_ij)^L
-				weightCostGradient.get(finalLayer - 1).set(j, i, delta);
 			}
-			biasCostGradient.get(finalLayer).set(i, deltaCost * 1d * 1d);
-		}
+			List<Matrix> biasCostGradient = new ArrayList<>();
+			List<Matrix> errors = new ArrayList<>();
+			for (Matrix mat : layers) {
+				errors.add(Matrix.getMatrix(false, mat.height, 1));
+				biasCostGradient.add(Matrix.getMatrix(false, mat.height, 1));
+			}
 
-		for (int i = 0; i < 1; i++) {
-			System.out.println(i);
-		}
-
-		/* Calculate hidden layer derivatives */
-		// l is the weight layer (l corresponds to the source layer number)
-		for (int l = weights.size() - 2; l >= 0; l--) {
+			/* Calculate final layer derivatives */
+			int finalLayer = layers.size()-1;
 			// i is target node
-			for (int i = 0; i < layers.get(l+1).height; i++) {
-				// Sum over routes that a_i can influence cost function
-				double deltaCost = 0d; // dC/d(a_i)^L
-				for (int k = 0; k < layers.get(l+2).height; k++) {
-					deltaCost += (weights.get(l+1).get(i, k) * 1d * errors.get(l+2).get(k));
-				}
-				errors.get(l+1).set(i, deltaCost);
-
+			for (int i = 0; i < layers.get(finalLayer).height; i++) {
+				double deltaCost = 2 * (layers.get(finalLayer).get(i) - targets.get(i)); // dC/d(a_i)^L
+				errors.get(finalLayer).set(i, deltaCost);
 				double deltaActivation = 1d; //d(a_j)^L/d(z_i)^L
 				double deltaRawActivation; // d(z_i)^L/d(w_ij)^L
 				// j is source node
-				for (int j = 0; j < layers.get(l).height; j++) {
-					deltaRawActivation = layers.get(l).get(j);
+				for (int j = 0; j < weights.get(weights.size()-1).width; j++) {
+					deltaRawActivation = layers.get(finalLayer - 1).get(j);
 					double delta = deltaCost * deltaActivation * deltaRawActivation; // dC/d(w_ij)^L
-					weightCostGradient.get(l).set(j, i, delta);
+					weightCostGradient.get(finalLayer - 1).set(j, i, delta);
+					weightCostMagnitude += delta * delta;
 				}
-				biasCostGradient.get(l + 1).set(i, deltaCost * 1d * 1d);
+				biasCostGradient.get(finalLayer).set(i, deltaCost * 1d * 1d);
+				biasCostMagnitude += deltaCost * deltaCost;
 			}
-		}
 
-		int count = 0;
-		double epsilon = 0.05;
-		double learningRate = 0.01;
-		double cost1 = Integer.MAX_VALUE;
-		/* Gradient descent */
-		while (count < 100 && cost1 - cost2 > epsilon) {
-			count++;
-			for (int l = 0; l < weights.size(); l++) {
-				Matrix weightLayer = weights.get(l);
-				for (int i = 0; i < weightLayer.height; i++) {
-					for (int j = 0; j < weightLayer.width; j++) {
-						weightLayer.set(j, i, weightLayer.get(j, i) - learningRate * weightCostGradient.get(l).get(j, i));
+			/* Calculate hidden layer derivatives */
+			// l is the weight layer (l corresponds to the source layer number)
+			for (int l = weights.size() - 2; l >= 0; l--) {
+				// i is target node
+				for (int i = 0; i < layers.get(l+1).height; i++) {
+					// Sum over routes that a_i can influence cost function
+					double deltaCost = 0d; // dC/d(a_i)^L
+					for (int k = 0; k < layers.get(l+2).height; k++) {
+						deltaCost += (weights.get(l+1).get(i, k) * 1d * errors.get(l+2).get(k));
+					}
+					errors.get(l+1).set(i, deltaCost);
+
+					double deltaActivation = 1d; //d(a_j)^L/d(z_i)^L
+					double deltaRawActivation; // d(z_i)^L/d(w_ij)^L
+					// j is source node
+					for (int j = 0; j < layers.get(l).height; j++) {
+						deltaRawActivation = layers.get(l).get(j);
+						double delta = deltaCost * deltaActivation * deltaRawActivation; // dC/d(w_ij)^L
+						weightCostGradient.get(l).set(j, i, delta);
+						weightCostMagnitude += delta * delta;
+					}
+					biasCostGradient.get(l + 1).set(i, deltaCost * 1d * 1d);
+					biasCostMagnitude += deltaCost * deltaCost;
+				}
+			}
+
+			int counter = 0;
+			double epsilon = 0.05;
+			double learningRate = 0.00000001 * weightCostMagnitude;
+			double cost1 = Integer.MAX_VALUE;
+
+			/* Gradient descent */
+			//while (counter < 100 && cost1 - cost2 > epsilon) {
+				counter++;
+				for (int l = 0; l < weights.size(); l++) {
+					Matrix weightLayer = weights.get(l);
+					for (int i = 0; i < weightLayer.height; i++) {
+						for (int j = 0; j < weightLayer.width; j++) {
+							weightLayer.set(j, i, weightLayer.get(j, i) - learningRate * weightCostGradient.get(l).get(j, i));
+						}
 					}
 				}
-			}
-			for (int l = 0; l < layers.size(); l++) {
-				Matrix biasLayer = biases.get(l);
-				for (int i = 0; i < biasLayer.height; i++) {
-					biasLayer.set(i, biasLayer.get(i) - learningRate * biasCostGradient.get(l).get(i));
+				for (int l = 0; l < layers.size(); l++) {
+					Matrix biasLayer = biases.get(l);
+					for (int i = 0; i < biasLayer.height; i++) {
+						biasLayer.set(i, biasLayer.get(i) - learningRate * biasCostGradient.get(l).get(i));
+					}
 				}
-			}
 
-			cost1 = cost2;
-			cost2 = getCost(inputs, targets);
-			int x = 1;
+				cost1 = cost2;
+				cost2 = getCost(inputs, targets);
+				int x = 1;
+			//}
 		}
 	}
 
@@ -188,6 +196,26 @@ public class IndividualNN implements Model {
 		}
 
 		return cost;
+	}
+
+	public double getAccuracy(List<List<Double>> testSet, List<Matrix> targetsList) {
+		double accuracy = 0d;
+		int count = 0;
+		for (int i = 0; i < testSet.size(); i++) {
+			List<Double> inputs = testSet.get(i);
+			Matrix targets = targetsList.get(i);
+			forwardPropagate(inputs);
+			Matrix outputs = getOutputs();
+
+			for (int j = 0; j < inputs.size(); j++) {
+				accuracy += Math.abs((outputs.get(j) - targets.get(j))/targets.get(j));
+				count++;
+			}
+		}
+
+
+
+		return accuracy/count;
 	}
 
 	public void setFitness(double fitness) {

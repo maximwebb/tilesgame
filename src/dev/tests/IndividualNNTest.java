@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class IndividualNNTest {
 	@Test
@@ -199,21 +200,50 @@ class IndividualNNTest {
 	@Test
 	void singleLayerBackPropagationIsCorrect() {
 		// ARRANGE
-		IndividualNN inn = new IndividualNN(3, new ArrayList<>(List.of(1, 2, 1)), false);
-		inn.setWeight(0, 0, 0, 0.8);
-		inn.setWeight(0, 0, 1, 0.4);
+		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(1, 2, 2,  1)), false);
+		inn.setWeight(0, 0, 0, 0.1);
+		inn.setWeight(0, 0, 1, 0.3);
 
-		inn.setWeight(1, 0, 0, -0.5);
-		inn.setWeight(1, 1, 0, 0.9);
-		inn.setBias(1, 0, 1);
-		inn.setBias(1, 1, 0.5);
+		inn.setWeight(1, 0, 0, 0.7);
+		inn.setWeight(1, 1, 0, 0.1);
+		inn.setWeight(1, 0, 1, -0.5);
+		inn.setWeight(1, 1, 1, 0.9);
+		inn.setBias(1, 0, 3);
+		inn.setBias(1, 1, -3);
 
-		inn.setBias(2, 0, 0.3);
+		inn.setWeight(2, 0, 0, 0.6);
+		inn.setWeight(2, 1, 0, -0.4);
+		inn.setBias(2, 0, 2);
+		inn.setBias(2, 1, -2);
+
+		inn.setBias(3, 0, 0.5);
+
+		inn.forwardPropagate(new ArrayList<>(List.of(0.6)));
+		inn.backPropagate(new ArrayList<>(List.of(new ArrayList<>(List.of(0.6)))), new ArrayList<>(List.of(new Matrix(new ArrayList<>(List.of(0.36)), 1, 1))));
+		List<List<Double>> trainingInputsList = new ArrayList<>();
+		List<Matrix> trainingTargetsList = new ArrayList<>();
+		List<List<Double>> testInputsList = new ArrayList<>();
+		List<Matrix> testTargetsList = new ArrayList<>();
+
+		for (int i = 0; i < 1000; i++) {
+			double num = Math.random() * 2 - 1;
+			trainingInputsList.add(new ArrayList<>(List.of(num)));
+			trainingTargetsList.add(new Matrix(new ArrayList<>(List.of(num * 0.4 + 0.2)), 1, 1));
+		}
+
+		for (int i = 0; i < 100; i++) {
+			double num = Math.random() * 100;
+			testInputsList.add(new ArrayList<>(List.of(num)));
+			testTargetsList.add(new Matrix(new ArrayList<>(List.of(num * 0.4 + 0.2)), 1, 1));
+		}
+
 
 		// ACT
-		inn.backPropagate(new ArrayList<>(List.of(0.8)), new Matrix(new ArrayList<>(List.of(-0.9)), 1, 1));
+		inn.backPropagate(trainingInputsList, trainingTargetsList);
 
 		// ASSERT
+		assertTrue(inn.getAccuracy(testInputsList, testTargetsList) < 0.01);
+		System.out.println(inn.getAccuracy(testInputsList, testTargetsList));
 
 	}
 

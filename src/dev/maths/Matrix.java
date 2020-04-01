@@ -49,6 +49,10 @@ public class Matrix {
 
 	// For column vectors
 	public double get(int pos) {
+		if (this.width != 1) {
+			throw new IllegalArgumentException("Matrix is not column vector");
+		}
+
 		return matrix.get(pos).get(0);
 	}
 
@@ -69,7 +73,22 @@ public class Matrix {
 	}
 
 	public void set(int pos, double value) {
+		if (this.width != 1) {
+			throw new IllegalArgumentException("Matrix is not column vector");
+		}
+
 		matrix.get(pos).put(0, value);
+	}
+
+	public void accSet(int from, int to, double value) {
+		this.set(from, to, this.get(from, to) + value);
+	}
+
+	public void accSet(int pos, double value) {
+		if (this.width != 1) {
+			throw new IllegalArgumentException("Matrix is not column vector");
+		}
+		this.set(pos, this.get(pos) + value);
 	}
 
 	public static Matrix add(Matrix matrix1, Matrix matrix2) {

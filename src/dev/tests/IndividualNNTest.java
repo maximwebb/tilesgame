@@ -198,28 +198,49 @@ class IndividualNNTest {
 	}
 
 	@Test
-	void singleLayerBackPropagationIsCorrect() {
+	void xorIsCorrect() {
 		// ARRANGE
-		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(1, 2, 2,  1)), false);
-		inn.setWeight(0, 0, 0, 0.1);
-		inn.setWeight(0, 0, 1, 0.3);
+		IndividualNN inn = new IndividualNN(3, new ArrayList<>(List.of(2, 2, 1)), false);
+		inn.setLearningRate(1.5);
 
-		inn.setWeight(1, 0, 0, 0.7);
-		inn.setWeight(1, 1, 0, 0.1);
-		inn.setWeight(1, 0, 1, -0.5);
-		inn.setWeight(1, 1, 1, 0.9);
-		inn.setBias(1, 0, 3);
-		inn.setBias(1, 1, -3);
+		inn.setWeight(0, 0, 0, -0.5);
+		inn.setWeight(0, 1, 0, 0.5);
+		inn.setWeight(0, 0, 1, 0.5);
+		inn.setWeight(0, 1, 1, 0.5);
 
-		inn.setWeight(2, 0, 0, 0.6);
-		inn.setWeight(2, 1, 0, -0.4);
-		inn.setBias(2, 0, 2);
-		inn.setBias(2, 1, -2);
+		inn.setWeight(1, 0, 0, -0.5);
+		inn.setWeight(1, 1, 0, 0.5);
 
-		inn.setBias(3, 0, 0.5);
+		inn.setBias(1, 0, 0.5);
+		inn.setBias(1, 1, -0.5);
+		inn.setBias(2, 0, 0.5);
 
-		inn.forwardPropagate(new ArrayList<>(List.of(0.6)));
-		inn.backPropagate(new ArrayList<>(List.of(new ArrayList<>(List.of(0.6)))), new ArrayList<>(List.of(new Matrix(new ArrayList<>(List.of(0.36)), 1, 1))));
+		List<List<Double>> inputsList = new ArrayList<>();
+		List<Matrix> targetsList = new ArrayList<>();
+
+		inputsList.add(new ArrayList<>(List.of(0d, 0d)));
+		inputsList.add(new ArrayList<>(List.of(0d, 1d)));
+		inputsList.add(new ArrayList<>(List.of(1d, 0d)));
+		inputsList.add(new ArrayList<>(List.of(1d, 1d)));
+
+		targetsList.add(new Matrix(new ArrayList<>(List.of(0d)), 1, 1));
+		targetsList.add(new Matrix(new ArrayList<>(List.of(1d)), 1, 1));
+		targetsList.add(new Matrix(new ArrayList<>(List.of(1d)), 1, 1));
+		targetsList.add(new Matrix(new ArrayList<>(List.of(0d)), 1, 1));
+
+		inn.train(inputsList, targetsList);
+		System.out.println("Input: {0, 0}, output: " + inn.computeOutput(inputsList.get(0)));
+		System.out.println("Input: {0, 1}, output: " + inn.computeOutput(inputsList.get(1)));
+		System.out.println("Input: {1, 0}, output: " + inn.computeOutput(inputsList.get(2)));
+		System.out.println("Input: {1, 1}, output: " + inn.computeOutput(inputsList.get(3)));
+	}
+
+	@Test
+	void linearFitIsCorrect() {
+		// ARRANGE
+		IndividualNN inn = new IndividualNN(3, new ArrayList<>(List.of(1, 2, 1)), true);
+		inn.setLearningRate(0.001);
+
 		List<List<Double>> trainingInputsList = new ArrayList<>();
 		List<Matrix> trainingTargetsList = new ArrayList<>();
 		List<List<Double>> testInputsList = new ArrayList<>();
@@ -227,14 +248,95 @@ class IndividualNNTest {
 
 		for (int i = 0; i < 1000; i++) {
 			double num = Math.random() * 2 - 1;
-			trainingInputsList.add(new ArrayList<>(List.of(num)));
-			trainingTargetsList.add(new Matrix(new ArrayList<>(List.of(num * 0.4 + 0.2)), 1, 1));
+			if (i < 900) {
+				trainingInputsList.add(new ArrayList<>(List.of(num)));
+				trainingTargetsList.add(new Matrix(new ArrayList<>(List.of(num * 0.8)), 1, 1));
+			}
+			else {
+				testInputsList.add(new ArrayList<>(List.of(num)));
+				testTargetsList.add(new Matrix(new ArrayList<>(List.of(num * 0.8)), 1, 1));
+			}
+		}
+
+		// ACT
+		inn.train(trainingInputsList, trainingTargetsList);
+		double accuracy = inn.getAccuracy(testInputsList, testTargetsList);
+
+		// ASSERT
+		assertTrue(accuracy < 0.01);
+	}
+
+	@Test
+	void quadraticFitIsCorrect() {
+		// ARRANGE
+		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(1, 10, 10, 1)), true);
+		inn.setLearningRate(0.0001);
+
+		List<List<Double>> trainingInputsList = new ArrayList<>();
+		List<Matrix> trainingTargetsList = new ArrayList<>();
+		List<List<Double>> testInputsList = new ArrayList<>();
+		List<Matrix> testTargetsList = new ArrayList<>();
+
+		for (int i = 0; i < 10000; i++) {
+			double num = Math.random() * 10 - 5;
+			if (i < 9000) {
+				trainingInputsList.add(new ArrayList<>(List.of(num)));
+				trainingTargetsList.add(new Matrix(new ArrayList<>(List.of(num * num)), 1, 1));
+			}
+			else {
+				testInputsList.add(new ArrayList<>(List.of(num)));
+				testTargetsList.add(new Matrix(new ArrayList<>(List.of(num * num)), 1, 1));
+			}
+		}
+
+		inn.backPropagate(trainingInputsList, trainingTargetsList);
+		double accuracy = inn.getAccuracy(testInputsList, testTargetsList);
+
+		System.out.println(accuracy);
+	}
+
+	@Test
+	void singleLayerBackPropagationIsCorrect() {
+		// ARRANGE
+//		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(1, 2, 2, 1)), false);
+//		inn.setWeight(0, 0, 0, 0.1);
+//		inn.setWeight(0, 0, 1, 0.3);
+//
+//		inn.setWeight(1, 0, 0, 0.7);
+//		inn.setWeight(1, 1, 0, 0.1);
+//		inn.setWeight(1, 0, 1, -0.5);
+//		inn.setWeight(1, 1, 1, 0.9);
+//		inn.setBias(1, 0, 3);
+//		inn.setBias(1, 1, -3);
+//
+//		inn.setWeight(2, 0, 0, 0.6);
+//		inn.setWeight(2, 1, 0, -0.4);
+//		inn.setBias(2, 0, 2);
+//		inn.setBias(2, 1, -2);
+//
+//		inn.setBias(3, 0, 0.5);
+
+		//inn.forwardPropagate(new ArrayList<>(List.of(0.6)));
+		//inn.backPropagate(new ArrayList<>(List.of(new ArrayList<>(List.of(0.6)))), new ArrayList<>(List.of(new Matrix(new ArrayList<>(List.of(0.36)), 1, 1))));
+		List<List<Double>> trainingInputsList = new ArrayList<>();
+		List<Matrix> trainingTargetsList = new ArrayList<>();
+		List<List<Double>> testInputsList = new ArrayList<>();
+		List<Matrix> testTargetsList = new ArrayList<>();
+
+		IndividualNN inn = new IndividualNN(4, new ArrayList<>(List.of(1, 1, 1)), true);
+
+		for (int i = 0; i < 10000; i++) {
+			int num1 = (int)Math.round(Math.random());
+			int num2 = (int)Math.round(Math.random());
+			trainingInputsList.add(new ArrayList<>(List.of((double)num1, (double)num2)));
+			trainingTargetsList.add(new Matrix(new ArrayList<>(List.of((double)(num1 ^ num2))), 1, 1));
 		}
 
 		for (int i = 0; i < 100; i++) {
-			double num = Math.random() * 100;
-			testInputsList.add(new ArrayList<>(List.of(num)));
-			testTargetsList.add(new Matrix(new ArrayList<>(List.of(num * 0.4 + 0.2)), 1, 1));
+			int num1 = (int)Math.round(Math.random());
+			int num2 = (int)Math.round(Math.random());
+			testInputsList.add(new ArrayList<>(List.of((double)num1, (double)num2)));
+			testTargetsList.add(new Matrix(new ArrayList<>(List.of((double)(num1 ^ num2))), 1, 1));
 		}
 
 
